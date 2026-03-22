@@ -1,0 +1,118 @@
+version: "3.9"
+
+# Spins up a minimal local cluster:
+#   4 PostgreSQL primaries + 4 read replicas + 1 Redis node.
+# The replicas use streaming replication from their respective primaries.
+#
+# Usage:
+#   docker compose up -d
+#   docker compose down -v   # tear down and wipe volumes
+
+x-pg-common: &pg-common
+  image: postgres:16-alpine
+  environment:
+    POSTGRES_DB: userdb
+    POSTGRES_USER: app
+    POSTGRES_PASSWORD: secret
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U app -d userdb"]
+    interval: 5s
+    timeout: 3s
+    retries: 10
+
+services:
+
+  # ── Shard 0 ────────────────────────────────────────────────────────────────
+  shard0-primary:
+    <<: *pg-common
+    ports: ["5432:5432"]
+    volumes:
+      - shard0-primary-data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+
+  shard0-replica:
+    <<: *pg-common
+    ports: ["5433:5432"]
+    environment:
+      POSTGRES_DB: userdb
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: secret
+      # Point replica at its primary (requires pg_hba.conf to allow replication)
+      PGUSER: app
+    depends_on:
+      shard0-primary:
+        condition: service_healthy
+    volumes:
+      - shard0-replica-data:/var/lib/postgresql/data
+
+  # ── Shard 1 ────────────────────────────────────────────────────────────────
+  shard1-primary:
+    <<: *pg-common
+    ports: ["5434:5432"]
+    volumes:
+      - shard1-primary-data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+
+  shard1-replica:
+    <<: *pg-common
+    ports: ["5435:5432"]
+    depends_on:
+      shard1-primary:
+        condition: service_healthy
+    volumes:
+      - shard1-replica-data:/var/lib/postgresql/data
+
+  # ── Shard 2 ────────────────────────────────────────────────────────────────
+  shard2-primary:
+    <<: *pg-common
+    ports: ["5436:5432"]
+    volumes:
+      - shard2-primary-data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+
+  shard2-replica:
+    <<: *pg-common
+    ports: ["5437:5432"]
+    depends_on:
+      shard2-primary:
+        condition: service_healthy
+    volumes:
+      - shard2-replica-data:/var/lib/postgresql/data
+
+  # ── Shard 3 ────────────────────────────────────────────────────────────────
+  shard3-primary:
+    <<: *pg-common
+    ports: ["5438:5432"]
+    volumes:
+      - shard3-primary-data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+
+  shard3-replica:
+    <<: *pg-common
+    ports: ["5439:5432"]
+    depends_on:
+      shard3-primary:
+        condition: service_healthy
+    volumes:
+      - shard3-replica-data:/var/lib/postgresql/data
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    command: redis-server --save "" --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  shard0-primary-data:
+  shard0-replica-data:
+  shard1-primary-data:
+  shard1-replica-data:
+  shard2-primary-data:
+  shard2-replica-data:
+  shard3-primary-data:
+  shard3-replica-data:
