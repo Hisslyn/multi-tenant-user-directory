@@ -153,8 +153,12 @@ def get_redis() -> redis_lib.Redis:
 def set_session(session_id: str, user_id: str, tenant_id: str) -> None:
     """Store a session with a TTL. O(1), no SQL involved."""
     r = get_redis()
-    r.hset(f"session:{session_id}", mapping={"user_id": user_id, "tenant_id": tenant_id})
-    r.expire(f"session:{session_id}", SESSION_TTL_SECONDS)
+    # Pipeline makes hset + expire atomic: if the process dies mid-flight
+    # the key won't be left without a TTL, preventing a Redis memory leak.
+    pipe = r.pipeline()
+    pipe.hset(f"session:{session_id}", mapping={"user_id": user_id, "tenant_id": tenant_id})
+    pipe.expire(f"session:{session_id}", SESSION_TTL_SECONDS)
+    pipe.execute()
 
 
 def get_session(session_id: str) -> dict | None:

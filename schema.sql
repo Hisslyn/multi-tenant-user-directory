@@ -51,8 +51,8 @@ CREATE TABLE billing_accounts (
 -- ---------------------------------------------------------------------------
 CREATE TABLE billing_transactions (
     txn_id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    billing_id      UUID        NOT NULL REFERENCES billing_accounts(billing_id),
-    tenant_id       UUID        NOT NULL,          -- denormalized for shard-local queries
+    billing_id      UUID        NOT NULL REFERENCES billing_accounts(billing_id) ON DELETE CASCADE,
+    tenant_id       UUID        NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
     amount_usd      NUMERIC(12,2) NOT NULL,        -- positive = credit, negative = debit
     description     TEXT,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -65,7 +65,7 @@ CREATE INDEX idx_billing_txn_tenant ON billing_transactions(tenant_id, created_a
 -- ---------------------------------------------------------------------------
 CREATE TABLE daily_analytics (
     snapshot_id     BIGSERIAL   PRIMARY KEY,
-    tenant_id       UUID        NOT NULL,
+    tenant_id       UUID        NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
     snapshot_date   DATE        NOT NULL,
     active_users    INT         NOT NULL DEFAULT 0,
     new_users       INT         NOT NULL DEFAULT 0,
