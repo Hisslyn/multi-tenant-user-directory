@@ -23,26 +23,26 @@ Demonstrates **SQL vs. NoSQL data modeling**, **application-level sharding**, an
 
 ```
                         ┌─────────────────────────────────────┐
-                        │          Application Layer           │
-                        │         user_directory.py            │
+                        │          Application Layer          │
+                        │         user_directory.py           │
                         └──────────────┬──────────────────────┘
                                        │
                ┌───────────────────────┼───────────────────────┐
                │                       │                       │
        ┌───────▼───────┐       ┌───────▼───────┐      ┌───────▼───────┐
-       │  shard_router │       │     db.py      │      │     Redis     │
-       │ consistent    │       │  write_conn()  │      │  (sessions)   │
-       │ hash ring     │       │  read_conn()   │      └───────────────┘
-       └───────┬───────┘       └───────┬────────┘
+       │  shard_router │       │     db.py     │      │     Redis     │
+       │ consistent    │       │  write_conn() │      │  (sessions)   │
+       │ hash ring     │       │  read_conn()  │      └───────────────┘
+       └───────┬───────┘       └───────┬───────┘
                │                       │
        ┌───────▼───────────────────────▼──────────────────────┐
-       │                  4 PostgreSQL Shards                  │
-       │                                                       │
-       │  Shard 0            Shard 1            Shard 2/3 ...  │
-       │  ┌────────┐         ┌────────┐                        │
+       │                  4 PostgreSQL Shards                 │
+       │                                                      │
+       │  Shard 0            Shard 1           Shard 2/3 ...  │
+       │  ┌────────┐         ┌────────┐                       │
        │  │Primary │──rep──► │Replica │  (×4 shards)          │
-       │  └────────┘         └────────┘                        │
-       └───────────────────────────────────────────────────────┘
+       │  └────────┘         └────────┘                       │
+       └──────────────────────────────────────────────────────┘
 ```
 
 | Layer | Technology | Purpose |
