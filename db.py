@@ -16,6 +16,7 @@ Dependencies (install with pip):
 
 import random
 import logging
+import threading
 from contextlib import contextmanager
 from typing import Generator
 
@@ -23,7 +24,7 @@ import psycopg
 from psycopg_pool import ConnectionPool
 import redis as redis_lib
 
-from config import SHARDS, ShardConfig, REDIS_URL, SESSION_TTL_SECONDS
+from config import ShardConfig, REDIS_URL, SESSION_TTL_SECONDS
 from shard_router import router
 
 log = logging.getLogger(__name__)
@@ -32,17 +33,22 @@ log = logging.getLogger(__name__)
 # PostgreSQL connection pools  (keyed by DSN string)
 # ---------------------------------------------------------------------------
 _pools: dict[str, ConnectionPool] = {}
+_pools_lock = threading.Lock()
 
 
 def _get_pool(dsn: str) -> ConnectionPool:
     if dsn not in _pools:
-        _pools[dsn] = ConnectionPool(
-            dsn,
-            min_size=2,
-            max_size=10,
-            kwargs={"autocommit": False},
-        )
-        log.info("Pool created for %s", dsn)
+        with _pools_lock:
+            # Double-checked locking: re-test inside the lock in case another
+            # thread created the pool while we were waiting to acquire it.
+            if dsn not in _pools:
+                _pools[dsn] = ConnectionPool(
+                    dsn,
+                    min_size=2,
+                    max_size=10,
+                    kwargs={"autocommit": False},
+                )
+                log.info("Pool created for %s", dsn)
     return _pools[dsn]
 
 

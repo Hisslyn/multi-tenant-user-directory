@@ -14,9 +14,9 @@ Why not plain modulo?
 
 import hashlib
 import bisect
-from typing import Dict, Tuple
+from typing import Dict
 
-from config import SHARDS, NUM_SHARDS, ShardConfig
+from config import SHARDS, ShardConfig
 
 VNODES_PER_SHARD = 150   # more vnodes → better key distribution
 
