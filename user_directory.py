@@ -119,7 +119,7 @@ def get_user_by_email(tenant_id: str, email: str) -> Optional[User]:
 
     if row is None:
         return None
-    return User(*row)
+    return User(str(row[0]), str(row[1]), row[2], row[3], row[4], row[5])
 
 
 def list_users(tenant_id: str) -> list[User]:
@@ -135,7 +135,7 @@ def list_users(tenant_id: str) -> list[User]:
             (tenant_id,),
         ).fetchall()
 
-    return [User(*r) for r in rows]
+    return [User(str(r[0]), str(r[1]), r[2], r[3], r[4], r[5]) for r in rows]
 
 
 def deactivate_user(tenant_id: str, user_id: str) -> None:
