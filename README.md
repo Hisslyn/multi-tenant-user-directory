@@ -69,6 +69,20 @@ Demonstrates **SQL vs. NoSQL data modeling**, **application-level sharding**, an
 └── .gitignore
 ```
 
+### Assignment Coverage Map
+
+| Task | Requirement | File(s) | Key symbol |
+|---|---|---|---|
+| **1. Data Modeling** | Relational schema (ACID) | `schema.sql` | `billing_accounts`, `billing_transactions`, FK constraints |
+| **1. Data Modeling** | ACID transaction in code | `user_directory.py` | `charge_tenant()` — `SELECT FOR UPDATE` + atomic debit + ledger insert |
+| **1. Data Modeling** | NoSQL key-value store for sessions | `db.py` | `set_session()`, `get_session()`, `delete_session()` via Redis |
+| **2. Sharding** | Application-level shard routing | `shard_router.py` | `ShardRouter` — consistent-hash ring with 150 virtual nodes per shard |
+| **2. Sharding** | Partition by `tenant_id` | `db.py` | `write_conn(tenant_id)`, `read_conn(tenant_id)` — both call `router.shard_for()` |
+| **2. Sharding** | Queries hit only one shard | `shard_router.py` + `db.py` | `shard_for()` → single `ConnectionPool` per request |
+| **3. Replication** | Primary/replica infrastructure | `docker-compose.yml` + `config.py` | 4 primaries + 4 replicas; DSNs stored per shard |
+| **3. Replication** | Route heavy reads to replica | `user_directory.py` | `get_tenant_analytics()` calls `read_conn(analytics=True)` |
+| **3. Replication** | Protect primary performance | `db.py` | `read_conn()` with `analytics=True` → `_replica_pool()`; session set `READ ONLY` |
+
 ---
 
 ## Quick Start
