@@ -81,7 +81,7 @@ Demonstrates **SQL vs. NoSQL data modeling**, **application-level sharding**, an
 ### 1. Clone and install dependencies
 
 ```bash
-git clone https://github.com/your-username/multi-tenant-user-directory
+git clone https://github.com/Hisslyn/multi-tenant-user-directory
 cd multi-tenant-user-directory
 
 python -m venv .venv
@@ -108,7 +108,7 @@ cp .env.example .env
 ### 4. Run a quick smoke test
 
 ```python
-from user_directory import create_tenant, create_user, charge_tenant, login
+from user_directory import create_tenant, create_user, add_credit, charge_tenant, login
 from decimal import Decimal
 
 # Create a tenant (atomic: inserts tenant + billing account)
@@ -235,7 +235,6 @@ If no replicas are configured (single-node dev), `db.py` silently falls back to 
 | Goal | Where to start |
 |---|---|
 | Add a 5th shard | Add entry to `SHARDS` in `config.py`, migrate ~20 % of tenants |
-| Use env vars for DSNs | Update `config.py` to read from `os.environ` |
 | Add HTTP API | Wrap `user_directory.py` functions with FastAPI routes |
 | Replace Redis with DynamoDB | Swap `set_session` / `get_session` in `db.py` |
 | Add cross-shard admin queries | Implement a scatter-gather layer that fans out to all shards |

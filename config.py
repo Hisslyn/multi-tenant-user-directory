@@ -10,6 +10,11 @@ import os
 from dataclasses import dataclass, field
 from typing import List
 
+from dotenv import load_dotenv
+
+# Load .env if present (no-op if the file does not exist)
+load_dotenv()
+
 # ---------------------------------------------------------------------------
 # Shard topology
 # ---------------------------------------------------------------------------
@@ -31,10 +36,9 @@ def _shard(n: int) -> ShardConfig:
         f"SHARD{n}_PRIMARY_DSN",
         f"postgresql://app:secret@shard{n}-primary:5432/userdb",
     )
-    replica = os.environ.get(
-        f"SHARD{n}_REPLICA_DSN",
-        f"postgresql://app:secret@shard{n}-replica:5432/userdb",
-    )
+    # Replica defaults to primary so the app works in single-node dev
+    # environments where no real streaming replica is running.
+    replica = os.environ.get(f"SHARD{n}_REPLICA_DSN", primary)
     return ShardConfig(shard_id=n, primary_dsn=primary, replica_dsns=[replica])
 
 
