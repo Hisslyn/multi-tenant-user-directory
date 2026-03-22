@@ -122,8 +122,12 @@ def read_conn(tenant_id: str, *, analytics: bool = False) -> Generator[psycopg.C
     with pool.connection() as conn:
         # Enforce read-only at the session level so misrouted writes are caught.
         conn.execute("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY")
-        yield conn
-        conn.execute("SET SESSION CHARACTERISTICS AS TRANSACTION READ WRITE")
+        try:
+            yield conn
+        finally:
+            # Always reset — even if the caller raises — so the connection
+            # is not returned to the pool in a READ ONLY state.
+            conn.execute("SET SESSION CHARACTERISTICS AS TRANSACTION READ WRITE")
 
 
 # ---------------------------------------------------------------------------

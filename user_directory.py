@@ -261,7 +261,7 @@ def get_tenant_analytics(tenant_id: str, days: int = 30) -> list[AnalyticsSnapsh
             SELECT snapshot_date, active_users, new_users, total_spend_usd
             FROM daily_analytics
             WHERE tenant_id = %s
-              AND snapshot_date >= CURRENT_DATE - INTERVAL '%s days'
+              AND snapshot_date >= CURRENT_DATE - (INTERVAL '1 day' * %s)
             ORDER BY snapshot_date DESC
             """,
             (tenant_id, days),

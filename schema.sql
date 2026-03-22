@@ -4,6 +4,9 @@
 -- This schema is deployed identically on every shard.
 -- =============================================================================
 
+-- gen_random_uuid() is built-in on PG 13+; pgcrypto provides it on older versions.
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- ---------------------------------------------------------------------------
 -- Tenants
 -- ---------------------------------------------------------------------------
