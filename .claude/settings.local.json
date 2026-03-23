@@ -4,7 +4,8 @@
       "Bash(gh auth:*)",
       "Bash(git --version)",
       "Bash(brew install:*)",
-      "Bash(gh repo:*)"
+      "Bash(gh repo:*)",
+      "Bash(docker compose:*)"
     ]
   }
 }
